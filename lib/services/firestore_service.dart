@@ -30,8 +30,8 @@ class FirestoreService {
       return null;
     }
   }
-
-  Future<void> addCrop(Crop crop) async {
+/*
+Future<void> addCrop(PlantModel crop) async {
     await _firestore.collection('crops').doc(crop.id).set({
       'userId': crop.userId,
       'cropType': crop.cropType,
@@ -42,6 +42,8 @@ class FirestoreService {
       'pestManagementNotes': crop.pestManagementNotes,
     });
   }
+ */
+
 
 // Add additional Firestore-related methods as needed.
 }

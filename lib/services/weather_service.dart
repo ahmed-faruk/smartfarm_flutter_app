@@ -7,15 +7,17 @@ class WeatherService {
   final String baseUrl = 'https://api.openweathermap.org/data/2.5';
 
   Future<Weather> getCurrentWeather(double latitude, double longitude) async {
-    final response = await http.get('$baseUrl/weather?lat=$latitude&lon=$longitude&appid=$apiKey' as Uri);
-
+    final response = await http.get(
+        '$baseUrl/weather?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric'
+        as Uri);
     if (response.statusCode == 200) {
       Map<String, dynamic> weatherData = json.decode(response.body);
       return Weather(
-        temperature: (weatherData['main']['temp'] - 273.15), // Convert Kelvin to Celsius
+        temperature: weatherData['main']['temp'],
         conditions: weatherData['weather'][0]['main'],
         humidity: weatherData['main']['humidity'].toDouble(),
         windSpeed: weatherData['wind']['speed'].toDouble(),
+        iconCode: weatherData['weather'][0]['icon'],
       );
     } else {
       throw Exception('Failed to fetch current weather data');
@@ -36,6 +38,7 @@ class WeatherService {
           conditions: item['weather'][0]['main'],
           humidity: item['main']['humidity'].toDouble(),
           windSpeed: item['wind']['speed'].toDouble(),
+          iconCode: item['weather'][0]['icon'],
         ));
       }
 

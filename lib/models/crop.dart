@@ -1,4 +1,5 @@
-class Crop {
+/*class PlantModel  {
+
   final String id;
   final String userId;
   final String cropType;
@@ -7,8 +8,9 @@ class Crop {
   final DateTime? lastWateringDate;
   final DateTime? lastFertilizationDate;
   final String? pestManagementNotes;
+  final String imageAsset;
 
-  Crop({
+  PlantModel({
     required this.id,
     required this.userId,
     required this.cropType,
@@ -17,5 +19,14 @@ class Crop {
     this.lastWateringDate,
     this.lastFertilizationDate,
     this.pestManagementNotes,
+    required this.imageAsset,
   });
+}
+*/
+class PlantModel {
+  final int id;
+  final String name;
+  final String imageAsset;
+
+  PlantModel({required this.id, required this.name, required this.imageAsset});
 }

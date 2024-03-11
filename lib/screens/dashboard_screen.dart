@@ -1,167 +1,184 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:smartfarm_flutter_app/models/weather.dart';
-import 'package:smartfarm_flutter_app/services/weather_service.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:animate_do/animate_do.dart';
+import 'package:smartfarm_flutter_app/models/plant_data.dart';
+import 'package:smartfarm_flutter_app/screens/search.dart';
+import 'package:smartfarm_flutter_app/utils/colorssys.dart';
+import 'package:smartfarm_flutter_app/widgets/widgets.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen  extends StatefulWidget {
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _PlantsHomeState createState() => _PlantsHomeState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  late WeatherService _weatherService;
-  late Weather _currentWeather;
-  late Position _currentPosition;
-  bool _locationServiceEnabled = false;
-  bool _internetConnected = true;
+class _PlantsHomeState extends State<DashboardScreen> {
+  late double startIndent, endIndent;
+  bool popular = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _weatherService = WeatherService();
-    _getLocationAndWeather();
+  void showPopular(BuildContext context) {
+    setState(() {
+      popular = true;
+      startIndent = MediaQuery.of(context).size.width * 0.05;
+      endIndent = MediaQuery.of(context).size.width * 0.6;
+    });
   }
 
-  Future<void> _getLocationAndWeather() async {
-    bool locationServiceEnabled = await Geolocator.isLocationServiceEnabled();
+  void showRecent(BuildContext context) {
     setState(() {
-      _locationServiceEnabled = locationServiceEnabled;
+      popular = false;
+      startIndent = MediaQuery.of(context).size.width * 0.48;
+      endIndent = MediaQuery.of(context).size.width * 0.3;
     });
+  }
 
-    if (!locationServiceEnabled) {
-      return;
-    }
-
-    Position currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      _currentPosition = currentPosition;
-    });
-
-    try {
-      Weather currentWeather = await _weatherService.getCurrentWeather(
-          _currentPosition.latitude, _currentPosition.longitude);
-      setState(() {
-        _currentWeather = currentWeather;
-      });
-    } catch (e) {
-      print('Failed to fetch current weather: $e');
-      // Handle weather fetch failure
-    }
+  @override
+  void didChangeDependencies() {
+    startIndent = MediaQuery.of(context).size.width * 0.05;
+    endIndent = MediaQuery.of(context).size.width * 0.6;
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              // Handle notifications
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.location_on),
-            onPressed: () {
-              _getLocationAndWeather();
-            },
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+      backgroundColor: themeColor,
+      body: SafeArea(
+        child: Column(
           children: [
-            DrawerHeader(
-              child: Text('User Profile'),
-              decoration: BoxDecoration(
-                color: Colors.blue,
+            NavBar(),
+            Intro(
+              title: "Explore plants",
+              subtitle: "Trending plants for your home",
+            ),
+            TextButton (
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (ctx) => Search(),
+                ),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: colorWhite, width: 1),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                margin: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                height: 50,
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Search",
+                      style: TextStyle(
+                        color: colorWhite,
+                        fontFamily: "Poppins",
+                      ),
+                    ),
+                    Icon(
+                      Icons.search,
+                      color: colorWhite,
+                    )
+                  ],
+                ),
               ),
             ),
-            ListTile(
-              title: Text('Settings'),
-              onTap: () {
-                // Handle settings
-              },
-            ),
-            ListTile(
-              title: Text('Profile'),
-              onTap: () {
-                // Handle profile
-              },
-            ),
-          ],
-        ),
-      ),
-      body: _locationServiceEnabled
-          ? _internetConnected
-          ? _currentWeather != null
-          ? Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            'Current Weather',
-            style: TextStyle(fontSize: 20),
-          ),
-          Text(
-            '${_currentWeather.temperature} °C',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '${_currentWeather.conditions}',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            'Humidity: ${_currentWeather.humidity}%',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            'Wind Speed: ${_currentWeather.windSpeed} m/s',
-            style: TextStyle(fontSize: 18),
-          ),
-        ],
-      )
-          : CircularProgressIndicator()
-          : Text(
-          'Please check your internet connection and try again.')
-          : Text('Please enable location services to get weather data.'),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Handle floating action button
-        },
-        child: Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home),
-              onPressed: () {
-                // Navigate to home
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.add_circle),
-              onPressed: () {
-                // Navigate to add crop
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.view_list),
-              onPressed: () {
-                // Navigate to manage crops
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.settings),
-              onPressed: () {
-                // Navigate to settings
-              },
-            ),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+                decoration: BoxDecoration(
+                  color: colorWhite,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              TextButton  (
+                                onPressed: () => showPopular(context),
+                                //highlightColor: colorWhite,
+                                child: Text(
+                                  "MOST POPULAR",
+                                  style: TextStyle(
+                                    fontFamily: "Poppins",
+                                    fontSize: 20,
+                                    color: popular ? Colors.black : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              TextButton (
+                                onPressed: () => showRecent(context),
+                                //highlightColor: colorWhite,
+                                child: Text(
+                                  "RECENT",
+                                  style: TextStyle(
+                                    fontFamily: "Poppins",
+                                    fontSize: 20,
+                                    color: popular ? Colors.grey : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Divider(
+                            thickness: 5,
+                            color: Colors.black,
+                            indent: startIndent,
+                            endIndent: endIndent,
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.all(10),
+                      height: MediaQuery.of(context).size.width * 0.6,
+                      child: ListView.builder(
+                        itemBuilder: (ctx, i) => PlantItem(
+                          plant: popular ? plantData[i] : recentData[i],
+                        ),
+                        itemCount:
+                        popular ? plantData.length : recentData.length,
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(10),
+                      height: 60,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          color: colorWhite,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xffe3e3e3),
+                              offset: Offset(6, 2),
+                              blurRadius: 1.0,
+                              spreadRadius: 2.0,
+                            )
+                          ]),
+                      child: TextButton (
+                        onPressed: () {},
+                        child: Text(
+                          "ORDER SEEDS",
+                          style: TextStyle(
+                            fontFamily: "Poppins",
+                            color: Colors.black87,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            )
           ],
         ),
       ),
