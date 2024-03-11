@@ -1,7 +1,6 @@
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:smartfarm_flutter_app/services/weather_service.dart';
 import 'package:smartfarm_flutter_app/models/weather.dart';
+import 'package:smartfarm_flutter_app/services/weather_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:animate_do/animate_do.dart';
 
@@ -11,44 +10,45 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  late WeatherService _weatherService;
   late Weather _currentWeather;
+  late Position _currentPosition;
   bool _locationServiceEnabled = false;
-  bool _internetConnection = false;
+  bool _internetConnected = true;
 
   @override
   void initState() {
     super.initState();
+    _weatherService = WeatherService();
     _getLocationAndWeather();
   }
 
   Future<void> _getLocationAndWeather() async {
-    // Check if location services are enabled
-    _locationServiceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!_locationServiceEnabled) {
-      return;
-    }
-
-    // Check internet connection
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    _internetConnection = connectivityResult == ConnectivityResult.mobile ||
-        connectivityResult == ConnectivityResult.wifi;
-
-    if (!_internetConnection) {
-      return;
-    }
-
-    // Get current position (latitude and longitude)
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-
-    // Fetch current weather based on user's location
-    WeatherService weatherService = WeatherService();
-    Weather weather = await weatherService.getCurrentWeather(
-        position.latitude, position.longitude);
-
+    bool locationServiceEnabled = await Geolocator.isLocationServiceEnabled();
     setState(() {
-      _currentWeather = weather;
+      _locationServiceEnabled = locationServiceEnabled;
     });
+
+    if (!locationServiceEnabled) {
+      return;
+    }
+
+    Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      _currentPosition = currentPosition;
+    });
+
+    try {
+      Weather currentWeather = await _weatherService.getCurrentWeather(
+          _currentPosition.latitude, _currentPosition.longitude);
+      setState(() {
+        _currentWeather = currentWeather;
+      });
+    } catch (e) {
+      print('Failed to fetch current weather: $e');
+      // Handle weather fetch failure
+    }
   }
 
   @override
@@ -56,81 +56,115 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dashboard'),
-        actions: <Widget>[
+        actions: [
           IconButton(
             icon: Icon(Icons.notifications),
             onPressed: () {
-              // Handle notification button press
+              // Handle notifications
             },
           ),
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.location_on),
             onPressed: () {
               _getLocationAndWeather();
             },
           ),
         ],
       ),
-      body: Center(
-        child: _currentWeather != null
-            ? Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Current Temperature: ${_currentWeather.temperature}°C',
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              child: Text('User Profile'),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
             ),
-            Text('Conditions: ${_currentWeather.conditions}'),
-            Text('Humidity: ${_currentWeather.humidity}%'),
-            Text('Wind Speed: ${_currentWeather.windSpeed} m/s'),
+            ListTile(
+              title: Text('Settings'),
+              onTap: () {
+                // Handle settings
+              },
+            ),
+            ListTile(
+              title: Text('Profile'),
+              onTap: () {
+                // Handle profile
+              },
+            ),
           ],
-        )
-            : _locationServiceEnabled
-            ? _internetConnection
-            ? CircularProgressIndicator()
-            : Text('No internet connection')
-            : Text('Location services disabled'),
+        ),
       ),
+      body: _locationServiceEnabled
+          ? _internetConnected
+          ? _currentWeather != null
+          ? Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            'Current Weather',
+            style: TextStyle(fontSize: 20),
+          ),
+          Text(
+            '${_currentWeather.temperature} °C',
+            style: TextStyle(fontSize: 18),
+          ),
+          Text(
+            '${_currentWeather.conditions}',
+            style: TextStyle(fontSize: 18),
+          ),
+          Text(
+            'Humidity: ${_currentWeather.humidity}%',
+            style: TextStyle(fontSize: 18),
+          ),
+          Text(
+            'Wind Speed: ${_currentWeather.windSpeed} m/s',
+            style: TextStyle(fontSize: 18),
+          ),
+        ],
+      )
+          : CircularProgressIndicator()
+          : Text(
+          'Please check your internet connection and try again.')
+          : Text('Please enable location services to get weather data.'),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add your action here
+          // Handle floating action button
         },
         child: Icon(Icons.add),
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Container(
-          height: 50.0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.home),
-                onPressed: () {
-                  // Navigate to Home screen
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () {
-                  // Navigate to Add Crop screen
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.manage_accounts),
-                onPressed: () {
-                  // Navigate to Manage Crops screen
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.settings),
-                onPressed: () {
-                  // Navigate to Settings screen
-                },
-              ),
-            ],
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {
+                // Navigate to home
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.add_circle),
+              onPressed: () {
+                // Navigate to add crop
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.view_list),
+              onPressed: () {
+                // Navigate to manage crops
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                // Navigate to settings
+              },
+            ),
+          ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
