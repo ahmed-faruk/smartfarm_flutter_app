@@ -5,6 +5,8 @@ import 'package:smartfarm_flutter_app/screens/search.dart';
 import 'package:smartfarm_flutter_app/utils/colorssys.dart';
 import 'package:smartfarm_flutter_app/widgets/widgets.dart';
 
+//https://dribbble.com/shots/22155645-Plant-Monitoring-Mobile-iOS-App
+
 class DashboardScreen  extends StatefulWidget {
   @override
   _PlantsHomeState createState() => _PlantsHomeState();
